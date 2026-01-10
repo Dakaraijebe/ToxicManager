@@ -1,0 +1,13 @@
+# Virtuální prostředí (tohle je to nejdůležitější)
+venv/
+env/
+
+# Cache soubory Pythonu (bordel, co se generuje samo)
+__pycache__/
+*.pyc
+
+# Konfigurace s HESLY (!!! NIKDY NEPOSÍLAT NA GITHUB !!!)
+config.ini
+
+# Logy a databáze (pokud bys měl SQLite)
+*.log
