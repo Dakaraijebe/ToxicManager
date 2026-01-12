@@ -4,62 +4,35 @@ import os
 
 class Database:
     def __init__(self):
-        # Načteme konfiguraci hned při vytvoření objektu
         self.config = configparser.ConfigParser()
-        self.config.read('config.ini')
+        
+        # 1. Zjistíme cestu k tomuto souboru (src/Core/Database.py)
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # 2. Vypočítáme cestu k rootu projektu (o 2 úrovně výš -> ToxicManager)
+        # src/Core -> src -> ToxicManager
+        project_root = os.path.dirname(os.path.dirname(current_dir))
+        
+        # 3. Cesta ke config/config.ini
+        config_path = os.path.join(project_root, 'config', 'config.ini')
+        
+        # 4. Načteme konfiguraci
+        read_files = self.config.read(config_path)
+        
+        if not read_files:
+            raise FileNotFoundError(f"Konfigurační soubor nebyl nalezen!\nOčekávaná cesta: {config_path}")
 
     def connect(self):
-        """
-        Tato metoda se připojí k databázi a vrátí connection objekt.
-        Volá se v main.py jako db.connect()
-        """
         try:
-            # Načteme údaje ze sekce [database]
-            user = self.config['database']['user']
-            password = self.config['database']['password']
-            dsn = self.config['database']['dsn']
-
-            # Vytvoříme spojení
-            connection = oracledb.connect(
-                user=user,
-                password=password,
-                dsn=dsn
-            )
+            # Python ConfigParser je case-sensitive (citlivý na velikost písmen)
+            # Ujisti se, že v config.ini je [DATABASE] velkými písmeny
+            user = self.config['DATABASE']['user']
+            password = self.config['DATABASE']['password']
+            dsn = self.config['DATABASE']['dsn']
+            
+            connection = oracledb.connect(user=user, password=password, dsn=dsn)
             return connection
-
         except KeyError as e:
-            print(f"CHYBA KONFIGURACE: V config.ini chybí klíč {e}")
-            raise # Pošleme chybu dál, ať ji chytí main.py
+            raise Exception(f"Chyba v config.ini: Chybí sekce nebo klíč {e}")
         except oracledb.Error as e:
-            print(f"CHYBA ORACLE: {e}")
-            raise
-    
-    _connection = None
-
-    @staticmethod
-    def get_connection():
-        if Database._connection is not None:
-            return Database._connection
-
-        config = configparser.ConfigParser()
-        # Hledáme config.ini v kořenové složce
-        if not os.path.exists('config.ini'):
-            raise Exception("CHYBA: Soubor config.ini nebyl nalezen!")
-            
-        config.read('config.ini')
-        
-        try:
-            user = config['database']['user']
-            password = config['database']['password']
-            dsn = config['database']['dsn']
-            
-            Database._connection = oracledb.connect(
-                user=user,
-                password=password,
-                dsn=dsn
-            )
-            print("--- ÚSPĚŠNĚ PŘIPOJENO K ORACLE DB ---")
-            return Database._connection
-        except Exception as e:
-            print(f"Chyba v Database.py: {e}")
-            raise
+            raise Exception(f"Chyba připojení k Oracle: {e}")

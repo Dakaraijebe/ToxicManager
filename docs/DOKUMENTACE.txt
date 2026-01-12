@@ -1,0 +1,253 @@
+DOKUMENTACE PROJEKTU: ToxicManager v2.0
+1. Identifikační údaje
+Název projektu: ToxicManager v2.0
+
+Autor: Plichta
+
+Kontaktní údaje: plichta@spsejecna.cz
+
+Název školy: SPŠE Ječná
+
+Předmět: Programování a vývoj aplikací
+
+Datum vypracování: 11. 01. 2026
+
+Typ práce: Školní projekt
+
+2. Specifikace požadavků uživatele (Use Cases)
+Aplikace je navržena pro správu skladu nebezpečných materiálů a evidenci objednávek. Uživatel (skladník/manažer) má k dispozici následující případy užití:
+
+Správa materiálů (Sklad):
+
+Uživatel může přidávat nové materiály (název, cena, úroveň nebezpečnosti).
+
+Automatické zařazení do kategorie na základě nebezpečnosti.
+
+Možnost editace ceny a nebezpečnosti.
+
+Soft Delete: Logické odstranění (deaktivace) a obnovení materiálu.
+
+Správa klientů:
+
+Evidence firem, emailů a finančního kreditu.
+
+Přidávání, editace a mazání klientů.
+
+Tvorba objednávek:
+
+Výběr klienta a materiálu.
+
+Zadání množství v kg.
+
+Transakční zpracování: Systém automaticky vypočítá cenu, ověří bonitu klienta, vytvoří záznam objednávky a odečte kredit.
+
+Reportování:
+
+Zobrazení manažerského přehledu (agregace dat) o útratách a počtech objednávek jednotlivých firem.
+
+Admin funkce:
+
+Import vstupních dat z JSON souboru.
+
+3. Architektura aplikace (Strukturální popis)
+Aplikace je postavena na jazyce Python 3.x a využívá architekturu oddělující logiku od zobrazení (inspirace vzorem MVC/Repository).
+
+Struktura tříd (Class Diagram - popis)
+ToxicManagerGUI (View): Hlavní třída dědící z tk.Tk. Zajišťuje vykreslování oken, záložek a formulářů. Neobsahuje SQL logiku, pouze volá metody repozitářů.
+
+Database (Core): Třída zajišťující připojení k Oracle DB. Načítá konfiguraci a poskytuje connection objekt (Singleton pattern).
+
+Repozitáře (Data Access Layer): Třídy zapouzdřující veškeré SQL příkazy:
+
+MaterialRepository: Metody get_all, add, delete (soft), restore.
+
+ClientRepository: CRUD operace pro klienty.
+
+OrderRepository: Metody pro create_order (transakce) a reporty.
+
+Struktura složek
+/src: Zdrojové kódy (Core, GUI, Repository).
+
+/config: Konfigurační soubory.
+
+/data: Vstupní data (JSON).
+
+/venv: Virtuální prostředí.
+
+4. Popis chodu aplikace (Behaviorální popis)
+Hlavním dynamickým procesem aplikace je Vytvoření objednávky, které probíhá následovně:
+
+Uživatel: Vyplní ID klienta, ID materiálu a množství -> Klikne na "Odeslat".
+
+Validace: GUI ověří, zda jsou vstupy číselné.
+
+Repository:
+
+Zahájí databázovou transakci.
+
+SELECT: Zjistí aktuální kredit klienta a cenu materiálu.
+
+Podmínka: Pokud kredit < cena, provede se ROLLBACK a vrátí chyba.
+
+INSERT: Vloží záznam do tabulky ORDERS.
+
+UPDATE: Odečte cenu z kreditu v tabulce CLIENTS.
+
+COMMIT: Potvrdí změny, pokud vše proběhlo v pořádku.
+
+GUI: Zobrazí výsledek uživateli a aktualizuje tabulky.
+
+5. E-R Model databáze
+Aplikace využívá relační databázi Oracle 21c XE. Schéma obsahuje 5 tabulek a využívá vazbu M:N.
+
+Tabulky a atributy
+CATEGORIES (Kategorie materiálů)
+
+ID (NUMBER, PK)
+
+NAME (VARCHAR2)
+
+DESCRIPTION (VARCHAR2)
+
+MATERIALS (Materiály)
+
+ID (NUMBER, PK)
+
+NAME (VARCHAR2)
+
+PRICE_PER_KG (NUMBER)
+
+HAZARD_LEVEL (VARCHAR2 - Enum: Low, Medium, High, Death)
+
+IS_ACTIVE (NUMBER - Boolean: 0/1)
+
+CATEGORY_ID (NUMBER, FK -> CATEGORIES)
+
+CLIENTS (Klienti)
+
+ID (NUMBER, PK)
+
+COMPANY_NAME (VARCHAR2)
+
+EMAIL (VARCHAR2)
+
+CREDIT_BALANCE (NUMBER)
+
+ORDERS (Objednávky - Vazební tabulka M:N)
+
+ID (NUMBER, PK)
+
+CLIENT_ID (NUMBER, FK -> CLIENTS)
+
+MATERIAL_ID (NUMBER, FK -> MATERIALS)
+
+QUANTITY (NUMBER)
+
+TOTAL_PRICE (NUMBER)
+
+CREATED_AT (DATE)
+
+APP_LOGS (Technická tabulka)
+
+ID, LOG_MSG, LOG_DATE
+
+Pohledy (Views):
+
+V_ACTIVE_MATERIALS: Zobrazuje pouze materiály s is_active = 1.
+
+V_ORDER_DETAILS: Spojuje (JOIN) tabulky Orders, Clients a Materials pro čitelný výpis.
+
+6. Schéma importu dat
+Aplikace podporuje import dat ze souboru data/import_data.json.
+
+Struktura JSON:
+
+JSON
+
+{
+  "clients": [
+    { "name": "String", "email": "String", "credit": Float }
+  ],
+  "materials": [
+    { "name": "String", "price": Float, "hazard": "String (Low/Medium/High/Death)" }
+  ]
+}
+Při importu se materiály automaticky zařazují do kategorií v DB.
+
+7. Konfigurace
+Konfigurace je uložena v souboru config/config.ini, který odděluje nastavení od kódu.
+
+Příklad config.ini:
+
+Ini, TOML
+
+[DATABASE]
+user = SYSTEM           ; Uživatelské jméno Oracle DB
+password = heslo123     ; Heslo k databázi
+dsn = localhost/XE      ; Adresa serveru a SID
+
+[APP]
+name = Toxic Manager
+version = 2.0
+debug = True            ; Povolení výpisu chyb do konzole
+8. Instalace a spuštění
+Podrobný postup je popsán v přiloženém souboru README.txt. Zkrácený postup:
+
+Prerekvizity: Nainstalovaný Python 3.10+, Oracle XE Database.
+
+Prostředí: Vytvoření virtuálního prostředí: python -m venv venv.
+
+Závislosti: Instalace knihoven: pip install -r requirements.txt.
+
+Databáze: Inicializace struktury spuštěním: py setup_db.py (nahrazuje ruční SQL import).
+
+Spuštění: Příkazem py main.py.
+
+9. Chybové stavy a jejich řešení
+Aplikace ošetřuje následující chybové stavy:
+
+Chyba připojení k DB (ORA-12541, ORA-01017):
+
+Příčina: DB neběží nebo špatné heslo v configu.
+
+Reakce: Messagebox s chybou, aplikace se bezpečně ukončí.
+
+Chyba integrity dat (Constraint Violation):
+
+Příčina: Pokus smazat klienta, který má objednávky.
+
+Reakce: Uživatel je upozorněn, že záznam nelze smazat kvůli vazbám.
+
+Chyba validace vstupu (ValueError):
+
+Příčina: Zadání textu do pole pro cenu/množství.
+
+Reakce: Chybové okno "Zadejte platné číslo".
+
+Transakční chyba (Nedostatek kreditu):
+
+Reakce: Transakce je odvolána (ROLLBACK), data zůstávají konzistentní, uživatel je informován.
+
+10. Použité knihovny třetích stran
+oracledb: Oficiální ovladač pro připojení k Oracle Database.
+
+tkinter (Standardní knihovna): Pro tvorbu GUI.
+
+configparser (Standardní knihovna): Pro čtení .ini souborů.
+
+json (Standardní knihovna): Pro import dat.
+
+11. Závěrečné resumé
+Projekt ToxicManager v2.0 splňuje veškeré požadavky zadání. Byla vytvořena desktopová aplikace s grafickým rozhraním, která komunikuje s relační databází Oracle.
+
+Klíčové dosažené cíle:
+
+Implementace kompletního databázového modelu (5 tabulek, pohledy, relace).
+
+Použití pokročilých SQL technik (Transakce, Agregace, JOIN).
+
+Profesionální struktura projektu (MVC, Config, Oddělení dat).
+
+Robustní ošetření chyb a uživatelsky přívětivé ovládání.
+
+Aplikace je plně funkční a připravená k nasazení ve výukovém prostředí.

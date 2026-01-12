@@ -1,0 +1,71 @@
+{
+  "clients": [
+    {
+      "name": "Galactic Empire",
+      "email": "vader@deathstar.gov",
+      "credit": 100000000.0
+    },
+    {
+      "name": "Wayne Enterprises",
+      "email": "bruce@wayne.com",
+      "credit": 50000000.0
+    },
+    {
+      "name": "Los Pollos Hermanos",
+      "email": "gus@pollos.nm",
+      "credit": 750000.0
+    },
+    {
+      "name": "Doofenshmirtz Evil Inc",
+      "email": "heinz@lovestrator.com",
+      "credit": 150.50
+    },
+    {
+      "name": "Acme Corporation",
+      "email": "coyote@acme.org",
+      "credit": 25000.0
+    },
+    {
+      "name": "Vault-Tec",
+      "email": "overseer@vault13.com",
+      "credit": 1200000.0
+    }
+  ],
+  "materials": [
+    {
+      "name": "Kryptonit (Zelený)",
+      "price": 85000.0,
+      "hazard": "High"
+    },
+    {
+      "name": "Koření (Spice Melange)",
+      "price": 150000.0,
+      "hazard": "Medium"
+    },
+    {
+      "name": "Tiberium",
+      "price": 450.0,
+      "hazard": "High"
+    },
+    {
+      "name": "Slurm (Koncentrát)",
+      "price": 25.5,
+      "hazard": "Low"
+    },
+    {
+      "name": "Demon Core (Šroubovák v ceně)",
+      "price": 25000.0,
+      "hazard": "Death"
+    },
+    {
+      "name": "Mithril",
+      "price": 5000.0,
+      "hazard": "Low"
+    },
+    {
+      "name": "Antihmota (1g)",
+      "price": 1000000.0,
+      "hazard": "Death"
+    }
+  ]
+}
